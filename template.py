@@ -59,11 +59,16 @@ class HMM:
             for (word, tag) in s:
                 data.append((tag, word.lower()))
 
-        # TODO compute the emission model
         emission_FD = ConditionalFreqDist(data)
-        lidstone_PD = LidstoneProbDist(emission_FD, 0.001, 1)
+        lidstone_PD = lambda emission_FD : LidstoneProbDist(emission_FD, 0.001, 1+emission_FD.B())
         self.emission_PD = ConditionalProbDist(emission_FD, lidstone_PD)
-        self.states = list(set(tag for (word, tag) in train_data))
+
+        self.states = set()
+        for s in train_data:
+            for (word, tag) in s:
+                self.states.add(tag)
+
+        self.states = list(self.states)
 
         return self.emission_PD, self.states
 
@@ -103,17 +108,16 @@ class HMM:
         # The data object should be an array of tuples of conditions and observations,
         # in our case the tuples will be of the form (tag_(i),tag_(i+1)).
         # DON'T FORGET TO ADD THE START SYMBOL </s> and the END SYMBOL </s>
-
         data = []
         for s in train_data:
             s.insert(0, ('<s>', '<s>'))
             s.append(('</s>', '</s>'))
 
-        tagGenerators = (((s[i][1], s[i+1][1]) for i in range(len(s)-1)) for s in train_data)
-        data = itertools.chain.from_iterable(tagGenerators)
+            for i in range(len(s)-1):
+                data.append((s[i][1], s[i+1][1]))
 
         transition_FD = ConditionalFreqDist(data)
-        lidstone_PD = LidstoneProbDist(transition_FD, 0.001)
+        lidstone_PD = lambda transition_FD : LidstoneProbDist(transition_FD, 0.001)
         self.transition_PD = ConditionalProbDist(transition_FD, lidstone_PD)
 
         return self.transition_PD
