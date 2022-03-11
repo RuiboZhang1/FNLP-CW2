@@ -1,4 +1,4 @@
-import nltk, inspect, sys, hashlib
+import nltk, inspect, sys, hashlib, itertools
 
 from nltk.corpus import brown
 
@@ -51,17 +51,19 @@ class HMM:
         :return: The emission probability distribution and a list of the states
         :rtype: Tuple[ConditionalProbDist, list(str)]
         """
-        raise NotImplementedError('HMM.emission_model')
-        # TODO prepare data
 
         # Don't forget to lowercase the observation otherwise it mismatches the test data
         # Do NOT add <s> or </s> to the input sentences
-        data = 'fixme'
+        data = []
+        for s in train_data:
+            for (word, tag) in s:
+                data.append((tag, word.lower()))
 
         # TODO compute the emission model
-        emission_FD = 'fixme'
-        self.emission_PD = 'fixme'
-        self.states = 'fixme'
+        emission_FD = ConditionalFreqDist(data)
+        lidstone_PD = LidstoneProbDist(emission_FD, 0.001, 1)
+        self.emission_PD = ConditionalProbDist(emission_FD, lidstone_PD)
+        self.states = list(set(tag for (word, tag) in train_data))
 
         return self.emission_PD, self.states
 
@@ -80,8 +82,7 @@ class HMM:
         :return: log base 2 of the estimated emission probability
         :rtype: float
         """
-        raise NotImplementedError('HMM.elprob')
-        return ... # fixme
+        return self.emission_PD[state].logprob(word)
 
 
     # Q2
@@ -98,20 +99,22 @@ class HMM:
         :return: The transition probability distribution
         :rtype: ConditionalProbDist
         """
-        raise NotImplementedError('HMM.transition_model')
-        # TODO: prepare the data
-        data = []
 
         # The data object should be an array of tuples of conditions and observations,
         # in our case the tuples will be of the form (tag_(i),tag_(i+1)).
         # DON'T FORGET TO ADD THE START SYMBOL </s> and the END SYMBOL </s>
+
+        data = []
         for s in train_data:
-            pass  # TODO
+            s.insert(0, ('<s>', '<s>'))
+            s.append(('</s>', '</s>'))
 
-        # TODO compute the transition model
+        tagGenerators = (((s[i][1], s[i+1][1]) for i in range(len(s)-1)) for s in train_data)
+        data = itertools.chain.from_iterable(tagGenerators)
 
-        transition_FD = 'fixme'
-        self.transition_PD = 'fixme'
+        transition_FD = ConditionalFreqDist(data)
+        lidstone_PD = LidstoneProbDist(transition_FD, 0.001)
+        self.transition_PD = ConditionalProbDist(transition_FD, lidstone_PD)
 
         return self.transition_PD
 
@@ -129,8 +132,7 @@ class HMM:
         :return: log base 2 of the estimated transition probability
         :rtype: float
         """
-        raise NotImplementedError('HMM.tlprob')
-        return ... # fixme
+        return self.transition_PD[state1].logprob(state2)
 
     # Train the HMM
     def train(self):
