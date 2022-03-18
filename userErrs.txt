@@ -4,14 +4,14 @@ ttags = model.tag_sentence(s)
 The following line threw a NameError exception: name 'ttags' is not defined:
 print("Tagged a trial sentence:\n  %s" % list(zip(s, ttags)))
 -------
-The following line threw a NotImplementedError exception: HMM.get_viterbi_value:
+The following line threw a IndexError exception: list index out of range:
 v_sample = model.get_viterbi_value('VERB', 5)
 -------
 The following lines threw a NameError exception: name 'v_sample' is not defined:
 if not (type(v_sample) == float and 0.0 <= v_sample):
     print('viterbi value (%s) must be a cost' % v_sample, file=sys.stderr)
 -------
-The following line threw a NotImplementedError exception: HMM.get_backpointer_value:
+The following line threw a IndexError exception: list index out of range:
 b_sample = model.get_backpointer_value('VERB', 5)
 -------
 The following lines threw a NameError exception: name 'b_sample' is not defined:
@@ -76,6 +76,20 @@ The following line threw a NameError exception: name 'answer7' is not defined:
 print(answer7)
 -------
 Exception in answer dict value computation:
+    model.get_viterbi_value("DET",0) -> IndexError('list index out of range')
+  File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
+    return eval(expr,gdict)
+  File "<string>", line 1, in <module>
+  File "template.py", line 198, in get_viterbi_value
+    return self.viterbi[index][step]
+Exception in answer dict value computation:
+    model.get_backpointer_value("DET",1) -> IndexError('list index out of range')
+  File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
+    return eval(expr,gdict)
+  File "<string>", line 1, in <module>
+  File "template.py", line 217, in get_backpointer_value
+    return self.backpointer[index][step]
+Exception in answer dict value computation:
     accuracy -> NameError("name 'accuracy' is not defined")
   File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
     return eval(expr,gdict)
@@ -95,6 +109,21 @@ Exception in answer dict value computation:
   File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
     return eval(expr,gdict)
   File "<string>", line 1, in <module>
+Exception in answer dict value computation:
+    model.get_viterbi_value("VERB",5) -> IndexError('list index out of range')
+  File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
+    return eval(expr,gdict)
+  File "<string>", line 1, in <module>
+  File "template.py", line 198, in get_viterbi_value
+    return self.viterbi[index][step]
+Exception in answer dict value computation:
+    min((model.get_viterbi_value(s,-1) for s in model.states)) if len(model.states)>0 else FAILED -> IndexError('list index out of range')
+  File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval
+    return eval(expr,gdict)
+  File "<string>", line 1, in <module>
+  File "<string>", line 1, in <genexpr>
+  File "template.py", line 198, in get_viterbi_value
+    return self.viterbi[index][step]
 Exception in answer dict value computation:
     list(ttags) -> NameError("name 'ttags' is not defined")
   File "/afs/inf.ed.ac.uk/user/s19/s1911027/Learning/fnlp/assignment2/autodrive_embed.py", line 55, in safeEval

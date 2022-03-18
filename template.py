@@ -1,4 +1,5 @@
 import nltk, inspect, sys, hashlib, itertools
+import numpy as np
 
 from nltk.corpus import brown
 
@@ -162,14 +163,20 @@ class HMM:
         :param number_of_observations: the number of observations
         :type number_of_observations: int
         """
-        raise NotImplementedError('HMM.initialise')
         # Initialise step 0 of viterbi, including
         #  transition from <s> to observation
         # use costs (- log-base-2 probabilities)
-        # TODO
-
         # Initialise step 0 of backpointer
-        # TODO
+        viterbi = np.zeros((len(self.states), number_of_observations))
+        backpoint = np.zeros((len(self.states), number_of_observations))
+
+        for i in range(len(self.states)):
+            viterbi[i][0] = self.elprob(self.states[i], observation)
+
+        self.viterbi = viterbi
+        self.backpointer = backpoint
+
+        return
 
     # Q3
     # Access function for testing the viterbi data structure
@@ -187,8 +194,8 @@ class HMM:
         :return: The value (a cost) for state as of step
         :rtype: float
         """
-        raise NotImplementedError('HMM.get_viterbi_value')
-        return ... # fix me
+        index = self.states.index(state)
+        return self.viterbi[index][step]
 
     # Q3
     # Access function for testing the backpointer data structure
@@ -206,8 +213,8 @@ class HMM:
         :return: The state name to go back to at step-1
         :rtype: str
         """
-        raise NotImplementedError('HMM.get_backpointer_value')
-        return ... # fix me
+        index = self.states.index(state)
+        return self.backpointer[index][step]
 
     # Q4a
     # Tag a new sentence using the trained model and already initialised data structures.
@@ -222,16 +229,22 @@ class HMM:
         :type observations: list(str)
         :return: List of tags corresponding to each word of the input
         """
-        raise NotImplementedError('HMM.tag')
         tags = []
 
-        for t in ...: # fixme to iterate over steps
-            for s in ...: # fixme to iterate over states
-                pass # fixme to update the viterbi and backpointer data structures
-                #  Use costs, not probabilities
+        for t in range(1, len(observations)-1):
+            for i in range(len(self.states)):
+                # Use costs, not probabilities
+                value = np.zeros(len(self.states))
+                for j in range(len(self.states)):
+                    value[j] = self.viterbi[j][t-1]
 
-        # TODO
+
+                self.viterbi[i][t] = value.max() * self.elprob(self.states[i], observations[t])
+                self.backpointer[i][t] = value.argmax()
+
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
+        for i in range(len(self.states)):
+            self.viterbi[i][len(observations)-1] = self.viterbi
 
         # TODO
         # Reconstruct the tag sequence using the backpointers.
@@ -248,8 +261,15 @@ class HMM:
         :type sentence: list(str)
         :rtype: list(str)
         """
-        raise NotImplementedError("HMM.tag_sentence")
-        return ... # fixme
+        for i in range(len(sentence)):
+            sentence[i] = sentence[i].lower()
+
+        self.initialise(sentence[0], len(sentence))
+
+        self.tag(sentence)
+
+
+        return
 
 
 
