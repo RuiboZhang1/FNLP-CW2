@@ -61,7 +61,7 @@ class HMM:
                 data.append((tag, word.lower()))
 
         emission_FD = ConditionalFreqDist(data)
-        lidstone_PD = lambda emission_FD : LidstoneProbDist(emission_FD, 0.001, 1+emission_FD.B())
+        lidstone_PD = lambda emission_FD: LidstoneProbDist(emission_FD, 0.001, 1 + emission_FD.B())
         self.emission_PD = ConditionalProbDist(emission_FD, lidstone_PD)
 
         self.states = set()
@@ -90,7 +90,6 @@ class HMM:
         """
         return self.emission_PD[state].logprob(word)
 
-
     # Q2
     # Compute transition model using ConditionalProbDist with the same
     #  estimator as above (but without the extra bin)
@@ -114,11 +113,11 @@ class HMM:
             s.insert(0, ('<s>', '<s>'))
             s.append(('</s>', '</s>'))
 
-            for i in range(len(s)-1):
-                data.append((s[i][1], s[i+1][1]))
+            for i in range(len(s) - 1):
+                data.append((s[i][1], s[i + 1][1]))
 
         transition_FD = ConditionalFreqDist(data)
-        lidstone_PD = lambda transition_FD : LidstoneProbDist(transition_FD, 0.001)
+        lidstone_PD = lambda transition_FD: LidstoneProbDist(transition_FD, 0.001)
         self.transition_PD = ConditionalProbDist(transition_FD, lidstone_PD)
 
         return self.transition_PD
@@ -167,11 +166,11 @@ class HMM:
         #  transition from <s> to observation
         # use costs (- log-base-2 probabilities)
         # Initialise step 0 of backpointer
-        viterbi = np.zeros((len(self.states), number_of_observations))
-        backpoint = np.zeros((len(self.states), number_of_observations))
+        viterbi = np.zeros((len(self.states), number_of_observations + 1))
+        backpoint = np.zeros((len(self.states), number_of_observations + 1))
 
         for i in range(len(self.states)):
-            viterbi[i][0] = self.elprob(self.states[i], observation)
+            viterbi[i][0] = self.tlprob('<s>', self.states[i]) + self.elprob(self.states[i], observation)
 
         self.viterbi = viterbi
         self.backpointer = backpoint
@@ -231,26 +230,27 @@ class HMM:
         """
         tags = []
 
-        for t in range(1, len(observations)-1):
+        for t in range(1, len(observations)):
             for i in range(len(self.states)):
                 # Use costs, not probabilities
-                value = np.zeros(len(self.states))
-                for j in range(len(self.states)):
-                    value[j] = self.viterbi[j][t-1]
+                # value = np.zeros(len(self.states))
+                # for j in range(len(self.states)):
+                #     value[j] = self.viterbi[j][t - 1]
+                #print(self.viterbi[:,[t-1]])
+                #print("max" , self.viterbi[:,[t-1]].max())
 
-
-                self.viterbi[i][t] = value.max() * self.elprob(self.states[i], observations[t])
-                self.backpointer[i][t] = value.argmax()
+                self.viterbi[i][t] = self.viterbi[:,t-1].max() + self.elprob(self.states[i], observations[t])
+                self.backpointer[i][t] = self.viterbi[:,t-1].argmax()
 
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
         for i in range(len(self.states)):
-            self.viterbi[i][len(observations)-1] = self.viterbi
+            self.viterbi[i][len(observations)] = self.tlprob(self.states[i], "</s>")
+            self.backpointer[i][len(observations)] = self.viterbi[:,len(observations)].argmax()
 
-        # TODO
         # Reconstruct the tag sequence using the backpointers.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
-        tags = ... # fixme
+        tags = ...  # fixme
 
         return tags
 
@@ -266,11 +266,9 @@ class HMM:
 
         self.initialise(sentence[0], len(sentence))
 
-        self.tag(sentence)
-
+        #self.tag(sentence)
 
         return
-
 
 
 def answer_question4b():
@@ -308,7 +306,7 @@ def hard_em(labeled_data, unlabeled_data, k):
     :rtype: HMM
     """
     raise NotImplementedError()
-    return ... # fix me
+    return ...  # fix me
 
 
 def answer_question5b():
@@ -329,7 +327,6 @@ def answer_question5b():
     raise NotImplementedError('answer_question5b')
 
     return trim_and_warn("Q5b", 500, inspect.cleandoc("""your answer"""))
-
 
 
 def answer_question6():
@@ -417,9 +414,9 @@ def answers():
     if hashlib.md5(''.join(map(lambda x: x[0],
                                train_data_universal[0] + train_data_universal[-1] + test_data_universal[0] +
                                test_data_universal[-1])).encode(
-            'utf-8')).hexdigest() != '164179b8e679e96b2d7ff7d360b75735':
+        'utf-8')).hexdigest() != '164179b8e679e96b2d7ff7d360b75735':
         print('!!!test/train split (%s/%s) incorrect -- this should not happen, please contact a TA !!!' % (
-        len(train_data_universal), len(test_data_universal)), file=sys.stderr)
+            len(train_data_universal), len(test_data_universal)), file=sys.stderr)
 
     # Create instance of HMM class and initialise the training set.
     model = HMM(train_data_universal)
@@ -464,16 +461,17 @@ def answers():
     accuracy = compute_acc(model, test_data_universal, print_mistakes=True)
     print('\nTagging accuracy for test set of %s sentences: %.4f' % (test_size, accuracy))
 
-    #Tag the sentence again to put the results in memory for automarker.
+    # Tag the sentence again to put the results in memory for automarker.
     model.tag_sentence(s)
 
     # Question 5a
     # Set aside the first 20 sentences of the training set
     num_sentences = 20
     semi_supervised_labeled = train_data_universal[:num_sentences]  # type list(list(tuple(str, str)))
-    semi_supervised_unlabeled = [[word for (word, tag) in sent] for sent in train_data_universal[num_sentences:]]  # type list(list(str))
+    semi_supervised_unlabeled = [[word for (word, tag) in sent] for sent in
+                                 train_data_universal[num_sentences:]]  # type list(list(str))
     print("Running hard EM for Q5a. This may take a while...")
-    t0 = hard_em(semi_supervised_labeled, semi_supervised_unlabeled, 0) # 0 iterations
+    t0 = hard_em(semi_supervised_labeled, semi_supervised_unlabeled, 0)  # 0 iterations
     tk = hard_em(semi_supervised_labeled, semi_supervised_unlabeled, 3)
     print("done.")
 
