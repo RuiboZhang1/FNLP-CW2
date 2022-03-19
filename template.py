@@ -166,14 +166,13 @@ class HMM:
         #  transition from <s> to observation
         # use costs (- log-base-2 probabilities)
         # Initialise step 0 of backpointer
-        viterbi = np.zeros((len(self.states), number_of_observations + 1))
-        backpoint = np.zeros((len(self.states), number_of_observations + 1))
+        viterbi = np.zeros((len(self.states), number_of_observations))
+        self.backpointer = [[""] * (number_of_observations) for _ in range(len(self.states))]
 
         for i in range(len(self.states)):
-            viterbi[i][0] = self.tlprob('<s>', self.states[i]) + self.elprob(self.states[i], observation)
+            viterbi[i][0] = - (self.tlprob('<s>', self.states[i]) + self.elprob(self.states[i], observation))
 
         self.viterbi = viterbi
-        self.backpointer = backpoint
 
         return
 
@@ -229,28 +228,37 @@ class HMM:
         :return: List of tags corresponding to each word of the input
         """
         tags = []
+        # Use costs, not probabilities
 
         for t in range(1, len(observations)):
             for i in range(len(self.states)):
-                # Use costs, not probabilities
-                # value = np.zeros(len(self.states))
-                # for j in range(len(self.states)):
-                #     value[j] = self.viterbi[j][t - 1]
-                #print(self.viterbi[:,[t-1]])
-                #print("max" , self.viterbi[:,[t-1]].max())
-
-                self.viterbi[i][t] = self.viterbi[:,t-1].max() + self.elprob(self.states[i], observations[t])
-                self.backpointer[i][t] = self.viterbi[:,t-1].argmax()
+                value = np.zeros(len(self.states))
+                for j in range(len(self.states)):
+                    state_from = self.states[j]
+                    state_to = self.states[i]
+                    trans = self.viterbi[j][t-1] - self.tlprob(state_from, state_to)
+                    value[j] = trans - self.elprob(state_to, observations[t])
+                self.viterbi[i][t] = value.min()
+                self.backpointer[i][t-1] = self.states[value.argmin()]
 
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
+        value = np.zeros(len(self.states))
         for i in range(len(self.states)):
-            self.viterbi[i][len(observations)] = self.tlprob(self.states[i], "</s>")
-            self.backpointer[i][len(observations)] = self.viterbi[:,len(observations)].argmax()
+            state_from = self.states[i]
+            state_to = "</s>"
+            value[i] = self.viterbi[i][len(observations)-1] - self.tlprob(state_from, state_to)
+            self.backpointer[i][len(observations)-1] = self.states[i]
 
+        last_backpointer = self.states[value.argmin()]
         # Reconstruct the tag sequence using the backpointers.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
-        tags = ...  # fixme
+        n = len(observations)-1
+        while(n >= 0):
+            prev = self.get_backpointer_value(last_backpointer, n)
+            tags.insert(0, prev)
+            last_backpointer = prev
+            n -= 1
 
         return tags
 
@@ -266,9 +274,9 @@ class HMM:
 
         self.initialise(sentence[0], len(sentence))
 
-        #self.tag(sentence)
+        tags = self.tag(sentence)
 
-        return
+        return tags
 
 
 def answer_question4b():
