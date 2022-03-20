@@ -236,25 +236,25 @@ class HMM:
                 for j in range(len(self.states)):
                     state_from = self.states[j]
                     state_to = self.states[i]
-                    trans = self.viterbi[j][t-1] - self.tlprob(state_from, state_to)
+                    trans = self.viterbi[j][t - 1] - self.tlprob(state_from, state_to)
                     value[j] = trans - self.elprob(state_to, observations[t])
                 self.viterbi[i][t] = value.min()
-                self.backpointer[i][t-1] = self.states[value.argmin()]
+                self.backpointer[i][t - 1] = self.states[value.argmin()]
 
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
         value = np.zeros(len(self.states))
         for i in range(len(self.states)):
             state_from = self.states[i]
             state_to = "</s>"
-            value[i] = self.viterbi[i][len(observations)-1] - self.tlprob(state_from, state_to)
-            self.backpointer[i][len(observations)-1] = self.states[i]
+            value[i] = self.viterbi[i][len(observations) - 1] - self.tlprob(state_from, state_to)
+            self.backpointer[i][len(observations) - 1] = self.states[i]
 
         last_backpointer = self.states[value.argmin()]
         # Reconstruct the tag sequence using the backpointers.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
-        n = len(observations)-1
-        while(n >= 0):
+        n = len(observations) - 1
+        while (n >= 0):
             prev = self.get_backpointer_value(last_backpointer, n)
             tags.insert(0, prev)
             last_backpointer = prev
@@ -274,9 +274,7 @@ class HMM:
 
         self.initialise(sentence[0], len(sentence))
 
-        tags = self.tag(sentence)
-
-        return tags
+        return self.tag(sentence)
 
 
 def answer_question4b():
@@ -286,16 +284,16 @@ def answer_question4b():
     :rtype: list(tuple(str,str)), list(tuple(str,str)), str
     :return: incorrectly tagged sequence, correctly tagged sequence and your answer [max 280 chars]
     """
-    raise NotImplementedError('answer_question4b')
 
     # One sentence, i.e. a list of word/tag pairs, in two versions
     #  1) As tagged by your HMM
     #  2) With wrong tags corrected by hand
-    tagged_sequence = 'fixme'
-    correct_sequence = 'fixme'
+    tagged_sequence = [('Has', 'VERB'), ('Moss', 'NOUN'), ('no', 'DET'), ('stirling', 'X'), ('virtues', 'X'), ('?', '.'), ('?', '.')]
+    correct_sequence = [('Has', 'VERB'), ('Moss', 'NOUN'), ('no', 'DET'), ('stirling', 'ADJ'), ('virtues', 'NOUN'), ('?', '.'), ('?', '.')]
     # Why do you think the tagger tagged this example incorrectly?
     answer = inspect.cleandoc("""\
-    fill me in""")
+    By observing the differences of tagging, we could see that stirling and virtues are tagged incorrectly. The reason for that 
+    might be these two words had never been seen in the training data. Therefore, the emission_PD will get 0.""")
 
     return tagged_sequence, correct_sequence, trim_and_warn("Q4a", 280, answer)
 
@@ -383,15 +381,20 @@ def compute_acc(hmm, test_data, print_mistakes):
     # TODO: modify this to print the first 10 sentences with at least one mistake if print_mistakes = True
     correct = 0
     incorrect = 0
+    count = 0
     for sentence in test_data:
         s = [word for (word, tag) in sentence]
         tags = hmm.tag_sentence(s)
-
+        wrong = False
         for ((word, gold), tag) in zip(sentence, tags):
             if tag == gold:
                 correct += 1
             else:
+                wrong = True
                 incorrect += 1
+        if wrong and (count < 10):
+            print(s)
+            count += 1
 
     return float(correct) / (correct + incorrect)
 
