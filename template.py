@@ -314,17 +314,19 @@ def hard_em(labeled_data, unlabeled_data, k):
     :return: HMM model trained with hard EM.
     :rtype: HMM
     """
-    tagger = HiddenMarkovModelTagger.train(labeled_data)
+    hmm = HMM(labeled_data)
+    hmm.train()
 
     for i in range(k):
         next_training_data = labeled_data.copy()
         for s in unlabeled_data:
-            hmm_tagged_sentence = tagger.tag(s)
-            next_training_data.append(hmm_tagged_sentence)
+            hmm_tagged_sentence = hmm.tag_sentence(s)
+            next_training_data.append(list(zip(s, hmm_tagged_sentence)))
 
-        tagger = HiddenMarkovModelTagger.train(next_training_data)
+        hmm = HMM(next_training_data)
+        hmm.train()
 
-    return tagger
+    return hmm
 
 
 def answer_question5b():
