@@ -9,6 +9,9 @@ from nltk.probability import ConditionalFreqDist
 # module for computing a Conditional Probability Distribution
 from nltk.probability import ConditionalProbDist, LidstoneProbDist
 
+# module for training a Hidden Markov Model and tagging sequences
+from nltk.tag.hmm import HiddenMarkovModelTagger
+
 from nltk.tag import map_tag
 
 from adrive2 import trim_and_warn
@@ -311,8 +314,17 @@ def hard_em(labeled_data, unlabeled_data, k):
     :return: HMM model trained with hard EM.
     :rtype: HMM
     """
-    raise NotImplementedError()
-    return ...  # fix me
+    tagger = HiddenMarkovModelTagger.train(labeled_data)
+
+    for i in range(k):
+        next_training_data = labeled_data.copy()
+        for s in unlabeled_data:
+            hmm_tagged_sentence = tagger.tag(s)
+            next_training_data.append(hmm_tagged_sentence)
+
+        tagger = HiddenMarkovModelTagger.train(next_training_data)
+
+    return tagger
 
 
 def answer_question5b():
