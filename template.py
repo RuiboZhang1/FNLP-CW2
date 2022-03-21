@@ -390,7 +390,6 @@ def compute_acc(hmm, test_data, print_mistakes):
     :type print_mistakes: bool
     :return: float
     """
-    # TODO: modify this to print the first 10 sentences with at least one mistake if print_mistakes = True
     correct = 0
     incorrect = 0
     count = 0
@@ -404,7 +403,7 @@ def compute_acc(hmm, test_data, print_mistakes):
             else:
                 wrong = True
                 incorrect += 1
-        if wrong and (count < 10):
+        if print_mistakes and wrong and (count < 10):
             print(s)
             count += 1
 
