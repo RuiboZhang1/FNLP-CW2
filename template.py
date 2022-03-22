@@ -106,11 +106,15 @@ class HMM:
         # DON'T FORGET TO ADD THE START SYMBOL </s> and the END SYMBOL </s>
         data = []
         for s in train_data:
-            s.insert(0, ('<s>', '<s>'))
-            s.append(('</s>', '</s>'))
-
+            data.append(("<s>", s[0][1]))
             for i in range(len(s) - 1):
                 data.append((s[i][1], s[i + 1][1]))
+            data.append((s[len(s)-1][1], "</s>"))
+
+            # s.insert(0, ('<s>', '<s>'))
+            # s.append(('</s>', '</s>'))
+
+
 
         transition_FD = ConditionalFreqDist(data)
         lidstone_PD = lambda transition_FD: LidstoneProbDist(transition_FD, 0.001)
@@ -307,6 +311,7 @@ def hard_em(labeled_data, unlabeled_data, k):
     :return: HMM model trained with hard EM.
     :rtype: HMM
     """
+    # temp = labeled_data.copy()
     hmm = HMM(labeled_data)
     hmm.train()
 
