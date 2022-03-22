@@ -9,9 +9,6 @@ from nltk.probability import ConditionalFreqDist
 # module for computing a Conditional Probability Distribution
 from nltk.probability import ConditionalProbDist, LidstoneProbDist
 
-# module for training a Hidden Markov Model and tagging sequences
-from nltk.tag.hmm import HiddenMarkovModelTagger
-
 from nltk.tag import map_tag
 
 from adrive2 import trim_and_warn
@@ -63,16 +60,12 @@ class HMM:
             for (word, tag) in s:
                 data.append((tag, word.lower()))
 
+                if (tag not in self.states):
+                    self.states.append(tag)
+
         emission_FD = ConditionalFreqDist(data)
         lidstone_PD = lambda emission_FD: LidstoneProbDist(emission_FD, 0.001, 1 + emission_FD.B())
         self.emission_PD = ConditionalProbDist(emission_FD, lidstone_PD)
-
-        self.states = set()
-        for s in train_data:
-            for (word, tag) in s:
-                self.states.add(tag)
-
-        self.states = list(self.states)
 
         return self.emission_PD, self.states
 
@@ -464,7 +457,7 @@ def answers():
         print('model.states value (%s) must be a non-empty list of strings' % model.states, file=sys.stderr)
 
     print('states: %s\n' % model.states)
-
+    print(hashlib.md5(" ".join(model.states).encode("utf-8")).hexdigest())
     ######
     # Try the model, and test its accuracy [won't do anything useful
     #  until you've filled in the tag method
@@ -492,8 +485,7 @@ def answers():
     # Set aside the first 20 sentences of the training set
     num_sentences = 20
     semi_supervised_labeled = train_data_universal[:num_sentences]  # type list(list(tuple(str, str)))
-    semi_supervised_unlabeled = [[word for (word, tag) in sent] for sent in
-                                 train_data_universal[num_sentences:]]  # type list(list(str))
+    semi_supervised_unlabeled = [[word for (word, tag) in sent] for sent in train_data_universal[num_sentences:]]  # type list(list(str))
     print("Running hard EM for Q5a. This may take a while...")
     t0 = hard_em(semi_supervised_labeled, semi_supervised_unlabeled, 0)  # 0 iterations
     tk = hard_em(semi_supervised_labeled, semi_supervised_unlabeled, 3)
