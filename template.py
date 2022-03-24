@@ -111,10 +111,6 @@ class HMM:
                 data.append((s[i][1], s[i + 1][1]))
             data.append((s[len(s)-1][1], "</s>"))
 
-            # s.insert(0, ('<s>', '<s>'))
-            # s.append(('</s>', '</s>'))
-
-
 
         transition_FD = ConditionalFreqDist(data)
         lidstone_PD = lambda transition_FD: LidstoneProbDist(transition_FD, 0.001)
@@ -173,6 +169,18 @@ class HMM:
             viterbi[i][0] = - (self.tlprob('<s>', self.states[i]) + self.elprob(self.states[i], observation))
 
         self.viterbi = viterbi
+
+        """
+        The data structure of viterbi is a 2d numpy array. The data type is numpy.float64. The number of rows equal to 
+        the number of states. The number of columns equal to the number of observations. It could be assessed by first
+        calculating the index of the state. Then self.viterbi[index][step] will return the viterbi value of the specific
+        state in specific step.
+        
+        The data structure of backpointer is a 2d array. The data type is string. The number of rows equal to the number
+        of states. The number of columns equal to the number of observations. It could be assessed by first
+        calculating the index of the state. Then self.backpointer[index][step] will return the backpointer for 
+        the state at a given step.
+        """
 
         return
 
@@ -311,7 +319,6 @@ def hard_em(labeled_data, unlabeled_data, k):
     :return: HMM model trained with hard EM.
     :rtype: HMM
     """
-    # temp = labeled_data.copy()
     hmm = HMM(labeled_data)
     hmm.train()
 
@@ -342,7 +349,6 @@ def answer_question5b():
     :rtype: str
     :return: your answer [max 500 chars]
     """
-    raise NotImplementedError('answer_question5b')
 
     return trim_and_warn("Q5b", 500, inspect.cleandoc("""your answer"""))
 
