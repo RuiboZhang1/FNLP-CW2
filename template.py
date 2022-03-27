@@ -245,7 +245,8 @@ class HMM:
                     state_from = self.states[j]
                     state_to = self.states[i]
                     trans = self.viterbi[j][t - 1] - self.tlprob(state_from, state_to)
-                    value[j] = trans - self.elprob(state_to, observations[t])
+                    temp = self.elprob(state_to, observations[t])
+                    value[j] = trans - temp
                 self.viterbi[i][t] = value.min()
                 self.backpointer[i][t - 1] = self.states[value.argmin()]
 
@@ -296,12 +297,12 @@ def answer_question4b():
     # One sentence, i.e. a list of word/tag pairs, in two versions
     #  1) As tagged by your HMM
     #  2) With wrong tags corrected by hand
-    tagged_sequence = [('Has', 'VERB'), ('Moss', 'NOUN'), ('no', 'DET'), ('stirling', 'X'), ('virtues', 'X'), ('?', '.'), ('?', '.')]
-    correct_sequence = [('Has', 'VERB'), ('Moss', 'NOUN'), ('no', 'DET'), ('stirling', 'ADJ'), ('virtues', 'NOUN'), ('?', '.'), ('?', '.')]
+    tagged_sequence = [('``', '.'), ('My', 'DET'), ('taste', 'NOUN'), ('is', 'VERB'), ('gaudy', 'ADV'), ('.', '.')]
+    correct_sequence = [('``', '.'), ('My', 'DET'), ('taste', 'NOUN'), ('is', 'VERB'), ('gaudy', 'ADJ'), ('.', '.')]
     # Why do you think the tagger tagged this example incorrectly?
-    answer = inspect.cleandoc("""\
-    By observing the differences of tagging, we could see that stirling and virtues are tagged incorrectly. The reason for that 
-    might be these two words had never been seen in the training data. Therefore, the emission_PD will get 0.""")
+    answer = inspect.cleandoc("""The word 'gaudy' might rare in the train data as ADJ. Therefore, self.elprob('ADJ', 'gaudy') is low.
+    There might more VERB followed by ADV than ADJ in the training data. The probability of transition model self.tlprob('VERB', 'ADV') is higher than self.tlprob('VERB', 'ADJ'). 
+    """)
 
     return tagged_sequence, correct_sequence, trim_and_warn("Q4a", 280, answer)
 
@@ -350,7 +351,7 @@ def answer_question5b():
     :return: your answer [max 500 chars]
     """
 
-    return trim_and_warn("Q5b", 500, inspect.cleandoc("""your answer"""))
+    return trim_and_warn("Q5b", 500, inspect.cleandoc(""""""))
 
 
 def answer_question6():
@@ -468,7 +469,6 @@ def answers():
         print('model.states value (%s) must be a non-empty list of strings' % model.states, file=sys.stderr)
 
     print('states: %s\n' % model.states)
-    print(hashlib.md5(" ".join(model.states).encode("utf-8")).hexdigest())
     ######
     # Try the model, and test its accuracy [won't do anything useful
     #  until you've filled in the tag method
