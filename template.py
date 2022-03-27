@@ -300,8 +300,7 @@ def answer_question4b():
     tagged_sequence = [('``', '.'), ('My', 'DET'), ('taste', 'NOUN'), ('is', 'VERB'), ('gaudy', 'ADV'), ('.', '.')]
     correct_sequence = [('``', '.'), ('My', 'DET'), ('taste', 'NOUN'), ('is', 'VERB'), ('gaudy', 'ADJ'), ('.', '.')]
     # Why do you think the tagger tagged this example incorrectly?
-    answer = inspect.cleandoc("""The word 'gaudy' might rare in the train data as ADJ. Therefore, self.elprob('ADJ', 'gaudy') is low.
-    There might more VERB followed by ADV than ADJ in the training data. The probability of transition model self.tlprob('VERB', 'ADV') is higher than self.tlprob('VERB', 'ADJ'). 
+    answer = inspect.cleandoc("""The word 'gaudy' might rare in the train data as ADJ. Therefore, self.elprob('ADJ', 'gaudy') is low. There might more VERB followed by ADV than ADJ in the training data. The probability of transition model self.tlprob('VERB', 'ADV') is higher than self.tlprob('VERB', 'ADJ'). 
     """)
 
     return tagged_sequence, correct_sequence, trim_and_warn("Q4a", 280, answer)
@@ -351,7 +350,8 @@ def answer_question5b():
     :return: your answer [max 500 chars]
     """
 
-    return trim_and_warn("Q5b", 500, inspect.cleandoc(""""""))
+    return trim_and_warn("Q5b", 500, inspect.cleandoc("""The emission model for ‘he’ is the same for all states in the t0 since ‘he’ doesn’t appear in the training set. ‘he’ is tagged as ‘Num’ because of the bias transition model. After a few iterations, the transition model tlprob(‘VERB’, ‘PRON’)  and the emission model elprob(‘PRON’, ‘he’) might be higher. The last word ‘them’ is mislabeled by tk. Harm EM might overfit the data. tlprob(NUM, ‘ADP’) and tlprob(‘NOUN’, ‘.’) might be much larger than elprob(‘PRON’, ‘them’). Therefore, mistag the label.
+"""))
 
 
 def answer_question6():
@@ -365,10 +365,8 @@ def answer_question6():
     :rtype: str
     :return: your answer [max 500 chars]
     """
-    raise NotImplementedError('answer_question6')
 
-    return trim_and_warn("Q6", 500, inspect.cleandoc("""
-    your answer"""))
+    return trim_and_warn("Q6", 500, inspect.cleandoc("""We use the pos-tagger to tag the whole sentences and extract the tags for unseen words. We can calculate the emission probability from the tags to those words. For each unseen word, combine the emission probability of this word with the original probability of words in the same tags then normalise the probability."""))
 
 
 def answer_question7():
@@ -380,10 +378,10 @@ def answer_question7():
     :rtype: str
     :return: your answer [max 500 chars]
     """
-    raise NotImplementedError('answer_question7')
 
     return trim_and_warn("Q7", 500, inspect.cleandoc("""\
-    your answer"""))
+    We converted the original Brown Corpus tagset to the Universal tagset because the Universal tagset has fewer tags. More tags being used meaning sparser data will be generated. For example, a word might have several tags in the Brown tagset. Compared to the same word with fewer tags in the Universal tagset. The emission probability of the word and each of its tags will be lower. Therefore, the model using Brown tagset will be less confident while tagging the word and have a lower accuracy.
+"""))
 
 
 def compute_acc(hmm, test_data, print_mistakes):
