@@ -168,6 +168,9 @@ class HMM:
         for i in range(len(self.states)):
             viterbi[i][0] = - (self.tlprob('<s>', self.states[i]) + self.elprob(self.states[i], observation))
 
+        for i in range(len(self.states)):
+            self.backpointer[i][0] = 0
+
         self.viterbi = viterbi
 
         """
@@ -245,28 +248,30 @@ class HMM:
                     state_from = self.states[j]
                     state_to = self.states[i]
                     trans = self.viterbi[j][t - 1] - self.tlprob(state_from, state_to)
-                    temp = self.elprob(state_to, observations[t])
-                    value[j] = trans - temp
+                    value[j] = trans - self.elprob(state_to, observations[t])
                 self.viterbi[i][t] = value.min()
-                self.backpointer[i][t - 1] = self.states[value.argmin()]
+                self.backpointer[i][t] = self.states[value.argmin()]
 
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
         value = np.zeros(len(self.states))
+
         for i in range(len(self.states)):
             state_from = self.states[i]
             state_to = "</s>"
-            value[i] = self.viterbi[i][len(observations) - 1] - self.tlprob(state_from, state_to)
-            self.backpointer[i][len(observations) - 1] = self.states[i]
+            value[i] = (self.viterbi[i][len(observations)-1]) - self.tlprob(state_from, state_to)
 
-        last_backpointer = self.states[value.argmin()]
+        best_path_pointer = self.states[value.argmin()]
+        tags.append(best_path_pointer)
+
+
         # Reconstruct the tag sequence using the backpointers.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
         n = len(observations) - 1
-        while (n >= 0):
-            prev = self.get_backpointer_value(last_backpointer, n)
+        while (n >= 1):
+            prev = self.get_backpointer_value(best_path_pointer, n)
             tags.insert(0, prev)
-            last_backpointer = prev
+            best_path_pointer = prev
             n -= 1
 
         return tags
